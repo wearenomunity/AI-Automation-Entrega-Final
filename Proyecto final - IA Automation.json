@@ -1,0 +1,1099 @@
+{
+  "name": "Proyecto final - IA Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "270108b6-5fb0-46cc-8804-9f68e1914c44",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3ZAUUNY99HU6dzD9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        128,
+        288
+      ],
+      "id": "3908a0e0-cb31-4ca9-8485-6e95b9a926a9",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "qAprLVQ0uM1yK7ja",
+          "name": "DeepSeek nomunity"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"tipo_lead\": \"Proveedor | Cliente | sin_clasificar\",\n\t\"resumen\": \"text\",\n    \"lugar\": \"text\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        304
+      ],
+      "id": "918141c7-1428-46c1-bf82-ccf1e8345b47",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1008,
+        -384
+      ],
+      "id": "beeacf5c-604f-4be6-a738-7a591377f255",
+      "name": "Mark a message as read",
+      "webhookId": "e5c7dd77-4d11-483e-b354-f781c9a60fb7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3ZAUUNY99HU6dzD9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.tipo_lead }}\n",
+                    "rightValue": "=Proveedor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "a12dc600-6a0c-4912-a42d-d9d1ca9fb8e6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PROVEEDOR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "49758767-b6c3-4144-ab43-194162fb6b3d",
+                    "leftValue": "={{ $json.output.tipo_lead }}",
+                    "rightValue": "Cliente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CLIENTE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5152866b-8783-4c2d-a6ad-a3436593c492",
+                    "leftValue": "={{ $json.output.tipo_lead }}",
+                    "rightValue": "sin_clasificar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HITL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        -48
+      ],
+      "id": "215661f3-d5dd-447f-ba37-86f17e575e84",
+      "name": "Clasificación IA"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data[\"Clasificar correo\"] }}",
+                    "rightValue": "Descartar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d3a36e1f-6f7b-493f-b049-0853ee290e0b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DESCARTAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7021e015-307f-4f9e-9b54-c1c01e41ce39",
+                    "leftValue": "={{ $json.data[\"Clasificar correo\"] }}",
+                    "rightValue": "Proveedor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PROVEEDOR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "75aeaa63-4735-43a9-8876-9d3833b2acc4",
+                    "leftValue": "={{ $json.data[\"Clasificar correo\"] }}",
+                    "rightValue": "Cliente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CLIENTE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        256
+      ],
+      "id": "a4bce797-db51-4cee-9a87-67823a2daf4f",
+      "name": "Clasificación HITL"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Clasifica el correo utilizando únicamente el contenido del body del correo.\n\nCategorías posibles para tipo_lead:\n\"Proveedor\": si el contenido indica que quien escribe representa un alojamiento (hotel, hostería, cabaña, posada, departamento turístico, etc.) y busca ofrecer sus servicios, establecer una colaboración o participar como alojamiento/proveedor.\n\"Cliente\": si el contenido indica que quien escribe está interesado en participar, consultar, reservar o contratar alguno de nuestros viajes, excursiones o experiencias.\n\"sin_clasificar\": si el contenido del body no permite determinar con suficiente claridad ninguna de las dos categorías, es decir si no se puede definir si es cliente o proveedor.\n\nTambién definí según el contenido del correo a qué lugar hacen referencia como interés y devolverlo en \"lugar\".\n\nImportante:\n- Analiza exclusivamente el body del correo.\n- Ignora completamente el remitente, dirección de email, nombre, asunto y cualquier otro dato externo al body.\n- No infieras la categoría basándote en información que no esté explícitamente o claramente indicada en el body.\n- Si hay información insuficiente, ambigua o contradictoria, devuelve \"sin_clasificar\".\n- No inventes información ni hagas suposiciones.\n- El resumen debe basarse únicamente en la información presente en el body.\n- No incluyas explicaciones sobre la clasificación.\n\nAdemás, genera un resumen breve y objetivo del contenido del correo, mencionando su intención principal y la información relevante.\n\nDevuelve únicamente un JSON válido, con esta estructura exacta:\n\n{\n\"tipo_lead\": \"Proveedor | Cliente | sin_clasificar\",\n\"resumen\": \"Resumen breve del correo\",\n\"lugar\": \"Lugar de interes\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "0bc8af62-f4e3-47cf-bba7-418fa942afd2",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Gmail Trigger').item.json.from.value[0].address }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        224
+      ],
+      "id": "48394cfc-02be-40a8-a1bc-793c68664b48",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "message": "Nos alegra mucho saber que quieren ser parte del proyecto!\nLes enviamos un formulario para que completen y en breve nos ponemos en contacto con ustedes!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -416
+      ],
+      "id": "1be540d6-c3ab-4cc0-9a1d-af38694fbec7",
+      "name": "Responder a Proveedor con formulario",
+      "webhookId": "29e090d6-4a13-4c2a-bce6-ae0649cc33cb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3ZAUUNY99HU6dzD9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "7315907583",
+        "message": "=Atención! Correo sin clasificar:\n\n {{ $json.output.resumen }}\n\nPor favor, responder si se trata de un proveedor, un cliente o si se debe desechar el correo.",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Clasificar correo",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Cliente"
+                  },
+                  {
+                    "option": "Proveedor"
+                  },
+                  {
+                    "option": "Descartar"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        144
+      ],
+      "id": "1239a6d4-67f3-4037-8a5f-571652f3056c",
+      "name": "Mensaje a Onboarding Leader",
+      "webhookId": "ff94c91c-729e-4a4b-b987-6dc05a47a77d",
+      "credentials": {
+        "telegramApi": {
+          "id": "z0Bzpe1cKq71dYps",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appqDbpRWMHQOLlFi",
+          "mode": "list",
+          "cachedResultName": "Nomunity_DB",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbliqFumSmn71kwv3",
+          "mode": "list",
+          "cachedResultName": "Errores n8n",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi/tbliqFumSmn71kwv3"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Descripción Error": "={{ $json.error }}",
+            "ID Error": "={{ $json.id }}",
+            "Flujo n8n": "AI Agent",
+            "Estado": "Pendiente"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID Error",
+              "displayName": "ID Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha y Hora",
+              "displayName": "Fecha y Hora",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Flujo n8n",
+              "displayName": "Flujo n8n",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Descripción Error",
+              "displayName": "Descripción Error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "En revisión",
+                  "value": "En revisión"
+                },
+                {
+                  "name": "Resuelto",
+                  "value": "Resuelto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Gravedad",
+              "displayName": "Gravedad",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Baja",
+                  "value": "Baja"
+                },
+                {
+                  "name": "Media",
+                  "value": "Media"
+                },
+                {
+                  "name": "Alta",
+                  "value": "Alta"
+                },
+                {
+                  "name": "Crítica",
+                  "value": "Crítica"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Relacionado a Lead",
+              "displayName": "Relacionado a Lead",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Notas de resolución",
+              "displayName": "Notas de resolución",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Responsable",
+              "displayName": "Responsable",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        192
+      ],
+      "id": "7683dbbf-7363-4f15-910f-4edbf534eb56",
+      "name": "Log errores",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "yHR4EQVEL00iSaxC",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "445d4814-5e6c-4764-b713-584f9a77b3e6",
+      "name": "Delete a message",
+      "webhookId": "fac2eb4d-ba02-4cf5-af4d-da3fc5aec72e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3ZAUUNY99HU6dzD9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BQLPM7MC4",
+          "mode": "id"
+        },
+        "text": "=Atención! \nCliente:  {{ $('Gmail Trigger').item.json.from.value[0].address }}\nInteres: {{ $json.output.lugar }}\nResumen: {{ $json.output.resumen }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1664,
+        -160
+      ],
+      "id": "d0fd6dc6-0cc9-4cb4-882a-4a54ca319502",
+      "name": "Mensaje a equipo de ventas",
+      "webhookId": "f660581d-741c-4e88-aea4-fbeedd080153",
+      "credentials": {
+        "slackApi": {
+          "id": "BCXGDcMrrf8picML",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appqDbpRWMHQOLlFi",
+          "mode": "list",
+          "cachedResultName": "Nomunity_DB",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSrPz2upRnCoWXF",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi/tblSrPz2upRnCoWXF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Contacto": "={{ $('Gmail Trigger').item.json.from.value[0].address }}",
+            "Status": "Procesado por IA",
+            "Descripción": "={{ $json.output.resumen }}",
+            "Lugar": "={{ $json.output.lugar }}",
+            "Tipo": "={{ $json.output.tipo_lead }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Contacto",
+              "displayName": "Contacto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Descripción",
+              "displayName": "Descripción",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lugar",
+              "displayName": "Lugar",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha alta",
+              "displayName": "Fecha alta",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha modificación",
+              "displayName": "Fecha modificación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores n8n",
+              "displayName": "Errores n8n",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        -304
+      ],
+      "id": "a1116dbe-0c5a-4394-ae5a-aeffa33064f6",
+      "name": "Agregar Lead a la base (IA)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "yHR4EQVEL00iSaxC",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appqDbpRWMHQOLlFi",
+          "mode": "list",
+          "cachedResultName": "Nomunity_DB",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSrPz2upRnCoWXF",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appqDbpRWMHQOLlFi/tblSrPz2upRnCoWXF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Contacto": "={{ $('Gmail Trigger').item.json.from.value[0].address }}",
+            "Status": "Aprobado por Humano",
+            "Tipo": "={{ $json.data[\"Clasificar correo\"] }}",
+            "Descripción": "=Info del correo: {{ $('Gmail Trigger').item.json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Contacto",
+              "displayName": "Contacto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por IA",
+                  "value": "Procesado por IA"
+                },
+                {
+                  "name": "Aprobado por Humano",
+                  "value": "Aprobado por Humano"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Descripción",
+              "displayName": "Descripción",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lugar",
+              "displayName": "Lugar",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha alta",
+              "displayName": "Fecha alta",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha modificación",
+              "displayName": "Fecha modificación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores n8n",
+              "displayName": "Errores n8n",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        336
+      ],
+      "id": "92f7a610-a39b-490e-bc9c-8430f85d0ab3",
+      "name": "Agregar lead a la base (HITL)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "yHR4EQVEL00iSaxC",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificación IA": {
+      "main": [
+        [
+          {
+            "node": "Agregar Lead a la base (IA)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Responder a Proveedor con formulario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensaje a equipo de ventas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agregar Lead a la base (IA)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensaje a Onboarding Leader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Clasificación IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log errores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder a Proveedor con formulario": {
+      "main": [
+        []
+      ]
+    },
+    "Mensaje a Onboarding Leader": {
+      "main": [
+        [
+          {
+            "node": "Clasificación HITL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificación HITL": {
+      "main": [
+        [
+          {
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder a Proveedor con formulario",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agregar lead a la base (HITL)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agregar lead a la base (HITL)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mensaje a equipo de ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje a equipo de ventas": {
+      "main": [
+        []
+      ]
+    },
+    "Agregar Lead a la base (IA)": {
+      "main": [
+        [
+          {
+            "node": "Mark a message as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6b321d04-88b9-4532-962d-4136a59e6fd7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "96dfff7a20f81aa42b9d2b4ff5374b7301c41e3ac438783f106f1949f4abdcaa"
+  },
+  "nodeGroups": [],
+  "id": "lTC1BRz7HRNA8XVn",
+  "tags": []
+}
